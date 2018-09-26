@@ -56,6 +56,9 @@ import io.card.payment.ui.ViewUtil;
  * @version 1.0
  */
 public final class CardIOActivity extends Activity {
+    
+    public static final String CUSTOM_LOG_TAG = "CUSTOM_CARD_IO";
+    
     /**
      * Boolean extra. Optional. Defaults to <code>false</code>. If set, the card will not be scanned
      * with the camera.
@@ -164,6 +167,12 @@ public final class CardIOActivity extends Activity {
     public static final String EXTRA_GUIDE_COLOR = "io.card.payment.guideColor";
 
     /**
+     * Integer extra. Optional. Defaults to {@link Color#TRANSPARENT}. Changes the color of the screen overlay on the
+     * camera.
+     */
+    public static final String EXTRA_MAIN_COLOR = "io.card.payment.mainColor";
+
+    /**
      * Boolean extra. Optional. If this value is set to <code>true</code> the user will not be prompted to
      * confirm their card number after processing.
      */
@@ -207,6 +216,30 @@ public final class CardIOActivity extends Activity {
      * resource.
      */
     public static final String EXTRA_SCAN_OVERLAY_LAYOUT_ID = "io.card.payment.scanOverlayLayoutId";
+
+    /**
+     * Integer extra. Optional. If this value is provided the interactable view would be found and bound to onCancelHandler method
+     * The integer value must be the id of a valid layout resource.
+     */
+    public static final String EXTRA_SCAN_OVERLAY_CANCEL_BUTTON_ID = "io.card.payment.scanOverlayCancelButtonId";
+
+    /**
+     * Integer extra. Optional. If this value is provided the interactable view would be found and bound to onFlashlightHandler method
+     * The integer value must be the id of a valid layout resource.
+     */
+    public static final String EXTRA_SCAN_OVERLAY_FLASHLIGHT_BUTTON_ID = "io.card.payment.scanOverlayFlashlightButtonId";
+
+    /**
+     * Integer extra. Optional. If this value is provided the interactable view would be found and bound to onFlashlightHandler method
+     * The integer value must be the id of a valid layout resource.
+     */
+    public static final String EXTRA_SCAN_OVERLAY_FLASHLIGHT_ON_ID = "io.card.payment.scanOverlayFlashlightOnId";
+
+    /**
+     * Integer extra. Optional. If this value is provided the interactable view would be found and bound to onFlashlightHandler method
+     * The integer value must be the id of a valid layout resource.
+     */
+    public static final String EXTRA_SCAN_OVERLAY_FLASHLIGHT_OFF_ID = "io.card.payment.scanOverlayFlashlightOffId";
 
     /**
      * Boolean extra. Optional. Use the PayPal icon in the ActionBar.
@@ -281,6 +314,8 @@ public final class CardIOActivity extends Activity {
 
     private static final int DATA_ENTRY_REQUEST_ID = 10;
     private static final int PERMISSION_REQUEST_ID = 11;
+    
+    private View flashLightOnView, flashLightOffView;
 
     private OverlayView mOverlay;
     private OrientationEventListener orientationListener;
@@ -873,12 +908,14 @@ public final class CardIOActivity extends Activity {
     }
 
     // Called by OverlayView
-    void toggleFlash() {
-        setFlashOn(!mCardScanner.isFlashOn());
+    boolean toggleFlash() {
+        boolean newValue = !mCardScanner.isFlashOn();
+        setFlashOn(newValue);
+        return newValue;
     }
 
     void setFlashOn(boolean b) {
-        boolean success = (mPreview != null && mOverlay != null && mCardScanner.setFlashOn(b));
+        boolean success = (mPreview != null && mCardScanner.setFlashOn(b));
         if (success) {
             mOverlay.setTorchOn(b);
         }
@@ -893,7 +930,10 @@ public final class CardIOActivity extends Activity {
      * layout mechanism instead, but to know for sure would require more work
      */
     private void setPreviewLayout() {
-
+        int onFlashlightId = -1;
+        if (getIntent().getIntExtra(EXTRA_SCAN_OVERLAY_FLASHLIGHT_BUTTON_ID, -1) != -1) {
+            onFlashlightId = getIntent().getIntExtra(EXTRA_SCAN_OVERLAY_FLASHLIGHT_BUTTON_ID, -1);
+        }
         // top level container
         mMainLayout = new FrameLayout(this);
         mMainLayout.setBackgroundColor(Color.BLACK);
@@ -901,6 +941,7 @@ public final class CardIOActivity extends Activity {
                 LayoutParams.MATCH_PARENT));
 
         FrameLayout previewFrame = new FrameLayout(this);
+        previewFrame.setBackgroundColor(Color.argb(255, 40, 71, 132));
         previewFrame.setId(FRAME_ID);
 
         mPreview = new Preview(this, null, mCardScanner.mPreviewWidth, mCardScanner.mPreviewHeight);
@@ -908,7 +949,7 @@ public final class CardIOActivity extends Activity {
                 LayoutParams.MATCH_PARENT, Gravity.TOP));
         previewFrame.addView(mPreview);
 
-        mOverlay = new OverlayView(this, null, Util.deviceSupportsTorch(this));
+        mOverlay = new OverlayView(this, null, onFlashlightId == -1 && Util.deviceSupportsTorch(this));
         mOverlay.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT));
         if (getIntent() != null) {
@@ -924,6 +965,15 @@ public final class CardIOActivity extends Activity {
             } else {
                 // default to greeeeeen
                 mOverlay.setGuideColor(Color.GREEN);
+            }
+
+            int mainColor = getIntent().getIntExtra(EXTRA_MAIN_COLOR, 0);
+            Log.e("DAFUCK", "mainColor " + mainColor);
+            if (mainColor != 0) {
+                mOverlay.setMainColor(mainColor);
+            } else {
+                // default to greeeeeen
+                mOverlay.setMainColor(Color.TRANSPARENT);
             }
 
             boolean hideCardIOLogo = getIntent().getBooleanExtra(EXTRA_HIDE_CARDIO_LOGO, false);
@@ -1009,6 +1059,45 @@ public final class CardIOActivity extends Activity {
 
                 inflater.inflate(resourceId, customOverlayLayout);
                 mMainLayout.addView(customOverlayLayout);
+
+                int onCancelId = getIntent().getIntExtra(EXTRA_SCAN_OVERLAY_CANCEL_BUTTON_ID, -1);
+                if (onCancelId != -1) {
+                    View onCancel = customOverlayLayout.findViewById(onCancelId);
+                    onCancel.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            onCancelHandler();
+                        }
+                    });
+                } else {
+                    Log.e(CUSTOM_LOG_TAG, "onCancelId not found");
+                }
+
+
+                if (onFlashlightId != -1) {
+                    View onFlashlight = customOverlayLayout.findViewById(onFlashlightId);
+                    onFlashlight.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            onFlashlightHandler();
+                        }
+                    });
+                } else {
+                    Log.e(CUSTOM_LOG_TAG, "onFlashlightId not found");
+                }
+
+                int flashLightOnId = getIntent().getIntExtra(EXTRA_SCAN_OVERLAY_FLASHLIGHT_ON_ID, -1);
+                int flashLightOffId = getIntent().getIntExtra(EXTRA_SCAN_OVERLAY_FLASHLIGHT_OFF_ID, -1);
+                if (flashLightOnId != -1) {
+                    flashLightOnView = mMainLayout.findViewById(flashLightOnId);
+                } else {
+                    Log.e(CUSTOM_LOG_TAG, "flashLightOnId not found");
+                }
+                if (flashLightOffId != -1) {
+                    flashLightOffView = mMainLayout.findViewById(flashLightOffId);
+                } else {
+                    Log.e(CUSTOM_LOG_TAG, "flashLightOffId not found");
+                }
             }
         }
 
@@ -1033,6 +1122,22 @@ public final class CardIOActivity extends Activity {
         setResult(resultCode, data);
         markedCardImage = null;
         finish();
+    }
+
+    private void onCancelHandler() {
+        Log.v(CUSTOM_LOG_TAG, "onCancelHandler");
+        onBackPressed();
+    }
+
+    private void onFlashlightHandler() {
+        Log.v(CUSTOM_LOG_TAG, "onFlashlightHandler");
+        boolean newValue = toggleFlash();
+        if (flashLightOnView != null && flashLightOffView != null) {
+            flashLightOnView.setVisibility(newValue ? View.VISIBLE : View.GONE);
+            flashLightOffView.setVisibility(newValue ? View.GONE : View.VISIBLE);
+        } else {
+            Log.e(CUSTOM_LOG_TAG, "flashlight views are null");
+        }
     }
 
     // for torch test

@@ -19,6 +19,7 @@ import android.graphics.RectF;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.GradientDrawable.Orientation;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -75,7 +76,7 @@ class OverlayView extends View {
     private static final Orientation[] GRADIENT_ORIENTATIONS = { Orientation.TOP_BOTTOM,
             Orientation.LEFT_RIGHT, Orientation.BOTTOM_TOP, Orientation.RIGHT_LEFT };
 
-    private static final int GUIDE_STROKE_WIDTH = 17;
+    private static final int GUIDE_STROKE_WIDTH = 7;
 
     private static final float CORNER_RADIUS_SIZE = 1 / 15.0f;
 
@@ -96,6 +97,7 @@ class OverlayView extends View {
     private int mRotation;
     private int mState;
     private int guideColor;
+    private int mainColor;
 
     private boolean hideCardIOLogo;
     private String scanInstructions;
@@ -132,7 +134,12 @@ class OverlayView extends View {
         mLockedBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mLockedBackgroundPaint.clearShadowLayer();
         mLockedBackgroundPaint.setStyle(Paint.Style.FILL);
-        mLockedBackgroundPaint.setColor(0xbb000000); // 75% black
+
+        // int myOpaqueColor = 0xbb284784;
+//        int factor = 192;// 75% black
+//        int color = ( factor << 24 ) | ( mainColor & 0x00ffffff );
+
+        mLockedBackgroundPaint.setColor(0xbb284784);
 
         scanInstructions = LocalizedStrings.getString(StringKey.SCAN_GUIDE);
     }
@@ -143,6 +150,14 @@ class OverlayView extends View {
 
     public void setGuideColor(int color) {
         guideColor = color;
+    }
+
+    public void setMainColor(int color) {
+        mainColor = color;
+    }
+
+    public int getMainColor() {
+        return mainColor;
     }
 
     public boolean getHideCardIOLogo() {
@@ -189,7 +204,7 @@ class OverlayView extends View {
             mLogoRect = Util.rectGivenCenter(logoPoint, (int) (LOGO_MAX_WIDTH * mScale),
                     (int) (LOGO_MAX_HEIGHT * mScale));
 
-            int[] gradientColors = { Color.WHITE, Color.BLACK };
+            int[] gradientColors = { Color.TRANSPARENT, Color.TRANSPARENT };
             Orientation gradientOrientation = GRADIENT_ORIENTATIONS[(mRotation / 90) % 4];
             mGradientDrawable = new GradientDrawable(gradientOrientation, gradientColors);
             mGradientDrawable.setGradientType(GradientDrawable.LINEAR_GRADIENT);
@@ -256,7 +271,6 @@ class OverlayView extends View {
 
     @Override
     public void onDraw(Canvas canvas) {
-
         if (mGuide == null || mCameraPreviewRect == null) {
             return;
         }
@@ -264,7 +278,6 @@ class OverlayView extends View {
         int tickLength;
 
         // Draw background rect
-
         mGradientDrawable.draw(canvas);
 
         if ((mRotation == 0) || (mRotation == 180)) {
@@ -277,6 +290,7 @@ class OverlayView extends View {
             // draw lock shadow.
             canvas.drawPath(mLockedBackgroundPath, mLockedBackgroundPaint);
         }
+        canvas.drawPath(mLockedBackgroundPath, mLockedBackgroundPaint);
 
         // Draw guide lines
         mGuidePaint.clearShadowLayer();

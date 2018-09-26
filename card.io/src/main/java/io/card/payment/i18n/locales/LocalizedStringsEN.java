@@ -44,7 +44,7 @@ public class LocalizedStringsEN implements SupportedLocale<StringKey> {
         mDisplay.put(StringKey.ENTRY_CARDHOLDER_NAME, "Cardholder Name");
         mDisplay.put(StringKey.ENTRY_EXPIRES, "Expires");
         mDisplay.put(StringKey.EXPIRES_PLACEHOLDER, "MM/YY");
-        mDisplay.put(StringKey.SCAN_GUIDE, "Hold card here.\nIt will scan automatically.");
+        mDisplay.put(StringKey.SCAN_GUIDE, "Hold your phone camera directly\nover your card and the details\nwill be automatically scanned");
         mDisplay.put(StringKey.KEYBOARD, "Keyboard…");
         mDisplay.put(StringKey.ENTRY_CARD_NUMBER, "Card Number");
         mDisplay.put(StringKey.MANUAL_ENTRY_TITLE, "Card Details");

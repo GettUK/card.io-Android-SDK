@@ -19,7 +19,6 @@ import android.graphics.RectF;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.GradientDrawable.Orientation;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -135,12 +134,6 @@ class OverlayView extends View {
         mLockedBackgroundPaint.clearShadowLayer();
         mLockedBackgroundPaint.setStyle(Paint.Style.FILL);
 
-        // int myOpaqueColor = 0xbb284784;
-//        int factor = 192;// 75% black
-//        int color = ( factor << 24 ) | ( mainColor & 0x00ffffff );
-
-        mLockedBackgroundPaint.setColor(0xbb284784);
-
         scanInstructions = LocalizedStrings.getString(StringKey.SCAN_GUIDE);
     }
 
@@ -154,6 +147,10 @@ class OverlayView extends View {
 
     public void setMainColor(int color) {
         mainColor = color;
+
+        if (getMainColor() != 0) { // opacity: 192/255 ~ 75%
+            mLockedBackgroundPaint.setColor(( 192 << 24 ) | ( mainColor & 0x00ffffff ));
+        }
     }
 
     public int getMainColor() {

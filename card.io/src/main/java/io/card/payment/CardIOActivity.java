@@ -941,7 +941,6 @@ public final class CardIOActivity extends Activity {
                 LayoutParams.MATCH_PARENT));
 
         FrameLayout previewFrame = new FrameLayout(this);
-        previewFrame.setBackgroundColor(Color.argb(255, 40, 71, 132));
         previewFrame.setId(FRAME_ID);
 
         mPreview = new Preview(this, null, mCardScanner.mPreviewWidth, mCardScanner.mPreviewHeight);
@@ -968,8 +967,8 @@ public final class CardIOActivity extends Activity {
             }
 
             int mainColor = getIntent().getIntExtra(EXTRA_MAIN_COLOR, 0);
-            Log.e("DAFUCK", "mainColor " + mainColor);
             if (mainColor != 0) {
+                previewFrame.setBackgroundColor(mainColor);
                 mOverlay.setMainColor(mainColor);
             } else {
                 // default to greeeeeen
@@ -1133,8 +1132,8 @@ public final class CardIOActivity extends Activity {
         Log.v(CUSTOM_LOG_TAG, "onFlashlightHandler");
         boolean newValue = toggleFlash();
         if (flashLightOnView != null && flashLightOffView != null) {
-            flashLightOnView.setVisibility(newValue ? View.VISIBLE : View.GONE);
-            flashLightOffView.setVisibility(newValue ? View.GONE : View.VISIBLE);
+            flashLightOnView.setVisibility(newValue ? View.GONE : View.VISIBLE);
+            flashLightOffView.setVisibility(newValue ? View.VISIBLE : View.GONE);
         } else {
             Log.e(CUSTOM_LOG_TAG, "flashlight views are null");
         }
